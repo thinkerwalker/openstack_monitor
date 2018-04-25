@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>detail</title>
+	  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="/static/js/jquery.min.js"></script>
+	<script src="/static/js/bootstrap.min.js"></script>
+	<link rel="stylesheet" href="/static/css/bootstrap.min.css">
+	<link rel="stylesheet" href="/static/css/detail.css">
+
+       <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts/echarts.min.js"></script>
+       <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts-gl/echarts-gl.min.js"></script>
+       <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts-stat/ecStat.min.js"></script>
+       <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts/extension/dataTool.min.js"></script>
+       <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts/map/js/china.js"></script>
+       <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts/map/js/world.js"></script>
+       <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=ZUONbpqGBsYGXNIYHicvbAbM"></script>
+       <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts/extension/bmap.min.js"></script>
+       <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/simplex.js"></script>
+</head>
+<body class="gray-bg">
+	<div class="container">
+		<div class="row " >
+		<div class="col-lg-12 col-md-12 col-sm-12" style="">
+				<h1 class="biaoti" >{{ instance_detail.name }}</h1>
+	            <table class="table table-striped">
+	            <tr>
+		            <th>cpus</th>
+		            <th>内存</th>
+		            <th>磁盘</th>
+		            <th>IP</th>
+                    <th>状态</th>
+                    <th>宿主机</th>
+		            <th>实例类型</th>
+		            <th>使用镜像</th>
+	            </tr>
+	            <tr>
+	            	<td>{{ instance_detail.vcpus }}</td>
+		            <td>{{ instance_detail.mem_total }}</td>
+		            <td>{{ instance_detail.disk_size }}</td>
+		            <td>{{ instance_detail.IP }}</td>
+		            <td>{{ instance_detail.status }}</td>
+		            <td>{{ instance_detail.hypervisor_host }}</td>
+		            <td>{{ instance_detail.flavor_type }}</td>
+		            <td>{{ instance_detail.image_name }}</td>
+	            </tr>
+	            </table>
+		</div>
+		</div>
+
+        <div class="row">
+            <button type="button" value="刷新" class="col-lg-offset-11 col-md-offset-11 col-sm-offset-11" id="refresh" style="color:#FFFFFF;background-color: #1ab394;width:30px;height: 20px">refresh</button>
+        </div>
+		<div class="row">
+		 	<div class="col-lg-4  col-md-4" >
+	              <div style="height: 300px;" id="cpu_percentage">
+						 
+	              </div>
+
+		 	</div>
+		 	<div class="col-lg-8  col-md-8 " >
+	              <div style="height: 300px;" id="cpu_utils">
+
+	              </div>
+
+		 	</div>
+
+		 	<div class="col-lg-4  col-md-4 " >
+	              <div style="height: 300px;" id="mem_percentage">
+
+	              </div>
+
+		 	</div>
+		 	<div class="col-lg-8  col-md-8" >
+	              <div style="height: 300px;"" id="mem_utils">
+
+	              </div>
+
+		 	</div>	
+	    </div>
+	</div>
+</body>
+<script type="text/javascript">
+
+
+    $("#refresh").click(function () {
+        var instance_name='{{ instance_detail.instance_name }}';
+        var hypervisor_host='{{ instance_detail.hypervisor_host }}';
+        $.ajax({
+            url:"/instance_detail_ajax",
+                    type:"POST",
+                    data:{"instance_name":instance_name,"hypervisor_host":hypervisor_host},
+                    dataType:"json",
+                    async : false,
+                    success:function (arg) {
+                        console.log(arg.status);
+                       if (arg.status == 200) {
+                         alert(arg.hypervisor_host);
+                       }
+                       if (arg.status == "403") {
+                           alert("密码错误");
+                       }
+                       if (arg.status == "404") {
+                           alert("用户名不存在");
+                       }
+                    }
+        });
+    });
+</script>
+<!-- //echarts for cpu_percentage -->
+    <script type="text/javascript">
+		var cpu_percentage_dom = document.getElementById("cpu_percentage");
+		var cpu_percentage = echarts.init(cpu_percentage_dom);
+		var app = {};
+		option = null;
+		option = {
+		    tooltip : {
+		        formatter: "{a} <br/>{b} : {c}%"
+		    },
+		    toolbox: {
+		        feature: {
+		            restore: {},
+		            saveAsImage: {}
+		        }
+		    },
+		    series: [
+		        {
+		            name: '业务指标',
+		            type: 'gauge',
+		            detail: {formatter:'{value}%'},
+		            data: [{value: 30, name: '完成率'}]
+		        }
+		    ]
+		};
+
+		if (option && typeof option === "object") {
+		    cpu_percentage.setOption(option, true);
+		}
+	</script>
+	<!-- echarts for mem_percentage -->
+	 <script type="text/javascript">
+    	//echarts for cpu_percentage
+		var dom = document.getElementById("mem_percentage");
+		var myChart = echarts.init(dom);
+		var app = {};
+		window.mem_value=1;
+		 $.ajax({
+                   url:"/influxdb_get_mem_usage.html",
+                    type:"GET",
+                    async : false,
+                    success:function(arg){
+                       // alert(username);
+                        //toFixed为四舍五入
+                        mem_value=arg.value.toFixed(0);
+                        console.log(window.mem_value);
+                    }
+       });
+		alert(mem_value);
+		option = null;
+		option = {
+		    tooltip : {
+		        formatter: "{a} <br/>{b} : {c}%"
+		    },
+		    toolbox: {
+		        feature: {
+		            restore: {},
+		            saveAsImage: {}
+		        }
+		    },
+		    series: [
+		        {
+		            name: '业务指标',
+		            type: 'gauge',
+		            detail: {formatter:'{value}%'},
+		            data: [{value: window.mem_value, name: '完成率'}],
+		        }
+		    ]
+		};
+
+		if (option && typeof option === "object") {
+		    myChart.setOption(option, true);
+		}
+	</script>
+	<!-- echarts for cpu_utils -->
+	 <script type="text/javascript">
+			var dom = document.getElementById("cpu_utils");
+			var myChart = echarts.init(dom);
+			var app = {};
+			option = null;
+			option = {
+				xAxis: {
+					type: 'category',
+					data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+				},
+				yAxis: {
+					type: 'value'
+				},
+				series: [{
+					data: [820, 932, 901, 934, 1290, 1330, 1320],
+					type: 'line'
+				}]
+			};
+			;
+			if (option && typeof option === "object") {
+				myChart.setOption(option, true);
+			}
+       </script>
+     <!-- echarts for cpu_utils -->
+	 <script type="text/javascript">
+			var dom = document.getElementById("mem_utils");
+			var myChart = echarts.init(dom);
+			var app = {};
+			option = null;
+			option = {
+				xAxis: {
+					type: 'category',
+					data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+				},
+				yAxis: {
+					type: 'value'
+				},
+				series: [{
+					data: [820, 932, 901, 934, 1290, 1330, 1320],
+					type: 'line'
+				}]
+			};
+			;
+			if (option && typeof option === "object") {
+				myChart.setOption(option, true);
+			}
+       </script>
+</html>
