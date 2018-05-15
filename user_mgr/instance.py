@@ -1,5 +1,4 @@
 from . import common
-from . import libvirt_data
 from django.shortcuts import render, HttpResponse
 from django.http import JsonResponse
 import requests
@@ -109,6 +108,6 @@ def instance_detail(request):
 def instance_detail_ajax(request):
     hypervisor_host=request.POST.get('hypervisor_host')
     instance_name=request.POST.get('instance_name')
-    instance_data=libvirt_data.get_data(hypervisor_host,instance_name)
+    # instance_data=libvirt_data.get_data(hypervisor_host,instance_name)
     message = {"status": 200,"hypervisor_host":hypervisor_host}
     return JsonResponse(message)
